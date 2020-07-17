@@ -31,7 +31,9 @@ func (c *MsChapV2ChallengePacket) GenerateChallenge(pID uint8, nasID string) {
 }
 
 func (c *MsChapV2ChallengePacket) Encode() []byte {
-	return append(c.Challenge, c.Name...)
+	// Microsoft authenticators do not currently provide information in the Name field.  This may change in the future.
+	// return append(c.Challenge, c.Name...)
+	return c.Challenge
 }
 
 type MsChapV2Packet struct {
