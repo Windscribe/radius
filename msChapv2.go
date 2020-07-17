@@ -20,6 +20,11 @@ type MsChapV2ChallengePacket struct {
 	Name      []byte
 }
 
+// MsChapV2ChallengePacket is sent after the Identity Request
+type MsChapV2SuccessPacket struct {
+	Message []byte
+}
+
 // MsCHapV2ResponsePacket is received as a response to the Challenge packet
 type MsCHapV2ResponsePacket struct {
 	PeerChallenge []byte // 16 bytes
@@ -301,6 +306,10 @@ func (c *MsChapV2ChallengePacket) Encode() []byte {
 	// Microsoft authenticators do not currently provide information in the Name field.  This may change in the future.
 	// return append(c.Challenge, c.Name...)
 	return c.Challenge
+}
+
+func (c *MsChapV2SuccessPacket) Encode() []byte {
+	return c.Message
 }
 
 type MsChapV2Packet struct {
