@@ -40,14 +40,14 @@ type MsChapV2Packet struct {
 	Data   []byte
 }
 
-func (p *MsChapV2Packet) ToEap() *EapPacket {
-	eap := p.Eap.Copy()
-	eap.Data = make([]byte, len(p.Data)+4)
-	eap.Data[0] = byte(p.OpCode)
-	eap.Data[1] = byte(eap.Identifier)
-	binary.BigEndian.PutUint16(eap.Data[2:4], uint16(len(p.Data)+4))
-	copy(eap.Data[4:], p.Data)
-	return eap
+func (p *MsChapV2Packet) Encode() (b []byte) {
+	b = make([]byte, len(p.Data)+4)
+	b[0] = byte(p.OpCode)
+	b[1] = byte(p.Eap.Identifier)
+	length := uint16(len(b))
+	binary.BigEndian.PutUint16(b[2:4], length)
+	copy(b[4:], p.Data)
+	return b
 }
 
 func MsChapV2PacketFromEap(eap *EapPacket) (p *MsChapV2Packet, err error) {
