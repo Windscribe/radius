@@ -36,7 +36,7 @@ func (p *PasswordService) Authenticate(request *Packet) (*Packet, error) {
 
 // NewServer return a new Server given a addr, secret, and service
 func NewServer(addr string, secret string, service Service) *Server {
-	ServerChallenges = map[uint8]string{}
+	ServerChallenges = map[uint8][]byte{}
 	s := &Server{addr: addr,
 		secret:    secret,
 		service:   service,
