@@ -1,10 +1,34 @@
 package radius
 
 import (
+	"crypto/rand"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 )
+
+type MsChapV2ChallengePacket struct {
+	Challenge []byte
+	Name      []byte
+}
+
+func randomHex(n int) (string, error) {
+	bytes := make([]byte, n)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+func (c *MsChapV2ChallengePacket) GenerateChallenge(pID uint8, nasID string) {
+	//TODO handle error
+	challenge, _ := randomHex(16)
+	// Save the challenge to verify the response
+	ServerChallenges[pID] = challenge
+	c.Challenge = []byte(challenge)
+	c.Name = []byte(nasID)
+}
 
 type MsChapV2Packet struct {
 	Eap    *EapPacket //解密的时候的eap信息,不使用里面的data
