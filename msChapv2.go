@@ -30,6 +30,10 @@ func (c *MsChapV2ChallengePacket) GenerateChallenge(pID uint8, nasID string) {
 	c.Name = []byte(nasID)
 }
 
+func (c *MsChapV2ChallengePacket) Encode() []byte {
+	return append(c.Challenge, c.Name...)
+}
+
 type MsChapV2Packet struct {
 	Eap    *EapPacket //解密的时候的eap信息,不使用里面的data
 	OpCode MsChapV2OpCode
