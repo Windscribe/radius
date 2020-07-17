@@ -170,22 +170,22 @@ var avpEapMessage avpEapMessaget
 
 type avpEapMessaget struct{}
 
-func (s avpEapMessaget) Value(p *Packet, a AVP) (*EapPacket, error) {
+func (s avpEapMessaget) Value(p *Packet, a AVP) interface{} {
 	eap, err := EapDecode(a.Value)
 	if err != nil {
 		//TODO error handle
 		fmt.Println("EapDecode fail ", err)
-		return nil, err
+		return nil
 	}
-	return eap, nil
+	return eap
 
 }
 func (s avpEapMessaget) String(p *Packet, a AVP) string {
-	eap, _ := s.Value(p, a)
+	eap := s.Value(p, a)
 	if eap == nil {
 		return "nil"
 	}
-	return eap.String()
+	return eap.(*EapPacket).String()
 }
 
 type AcctStatusTypeEnum uint32
