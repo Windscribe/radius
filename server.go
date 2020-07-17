@@ -19,7 +19,7 @@ type Server struct {
 	cl        *ClientList
 }
 
-var ServerChallenges map[uint8]string
+var ServerChallenges map[uint8][]byte
 
 type Service interface {
 	RadiusHandle(request *Packet) *Packet
