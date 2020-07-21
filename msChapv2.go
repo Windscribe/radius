@@ -294,19 +294,11 @@ func randomBytes(n int) ([]byte, error) {
 }
 
 func nextIdentifier(data map[uint8][]byte) uint8 {
-	var maxNumber uint8
-	for maxNumber = range data {
-		break
+	nextID := uint8(len(data)) + 1
+	if nextID > 255 {
+		nextID = 1
 	}
-	for n := range data {
-		if n > maxNumber {
-			maxNumber = n
-		}
-	}
-	if maxNumber+1 > 255 {
-		maxNumber = 1
-	}
-	return maxNumber
+	return nextID
 }
 
 func (c *MsChapV2ChallengePacket) GenerateChallenge(nasID string) uint8 {
