@@ -388,7 +388,7 @@ type MsChapV2Packet struct {
 }
 
 func (p *MsChapV2Packet) Encode() (b []byte) {
-	b = make([]byte, len(p.Data)+4)
+	b = make([]byte, len(p.Data)+5)
 	b[0] = byte(p.OpCode)
 	b[1] = byte(p.Eap.Identifier)
 	length := uint16(len(b))
