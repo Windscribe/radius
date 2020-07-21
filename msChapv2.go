@@ -20,7 +20,7 @@ type MsChapV2ChallengePacket struct {
 	Name      []byte
 }
 
-// MsChapV2ChallengePacket is sent after the Identity Request
+// MsChapV2SuccessPacket is sent after the Identity Request
 type MsChapV2SuccessPacket struct {
 	Message []byte
 }
@@ -293,13 +293,31 @@ func randomBytes(n int) ([]byte, error) {
 	return bytes, nil
 }
 
-func (c *MsChapV2ChallengePacket) GenerateChallenge(pID uint8, nasID string) {
+func nextIdentifier(data map[uint8][]byte) uint8 {
+	var maxNumber uint8
+	for maxNumber = range data {
+		break
+	}
+	for n := range data {
+		if n > maxNumber {
+			maxNumber = n
+		}
+	}
+	if maxNumber+1 > 255 {
+		maxNumber = 1
+	}
+	return maxNumber
+}
+
+func (c *MsChapV2ChallengePacket) GenerateChallenge(nasID string) uint8 {
 	//TODO handle error
+	identifier := nextIdentifier(ServerChallenges)
 	challenge, _ := randomBytes(16)
 	// Save the challenge to verify the response
-	ServerChallenges[pID] = challenge
+	ServerChallenges[identifier] = challenge
 	c.Challenge = []byte(challenge)
 	c.Name = []byte(nasID)
+	return identifier
 }
 
 func (c *MsChapV2ChallengePacket) Encode() []byte {
