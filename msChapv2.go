@@ -121,18 +121,19 @@ func NtPasswordHash(password string) []byte {
 // 	}
 func ChallengeResponse(challenge, passwordHash []byte) []byte {
 	ZPasswordHash := zeroPadding(passwordHash, 21)
-	fmt.Printf("ChallengeResponse: ZPasswordHash = %+v", ZPasswordHash)
-	part1, _ := DesEncrypt(challenge, ZPasswordHash[0:7])
+	fmt.Printf("ChallengeResponse: ZPasswordHash = %+v\n", ZPasswordHash)
+	part1, err := DesEncrypt(challenge, ZPasswordHash[0:7])
+	fmt.Printf("ChallengeResponse: err = %+v\n", err)
 	part2, _ := DesEncrypt(challenge, ZPasswordHash[7:14])
 	part3, _ := DesEncrypt(challenge, ZPasswordHash[14:21])
-	fmt.Printf("ChallengeResponse: part1 = %+v", part1)
-	fmt.Printf("ChallengeResponse: part2 = %+v", part2)
-	fmt.Printf("ChallengeResponse: part3 = %+v", part3)
+	fmt.Printf("ChallengeResponse: part1 = %+v\n", part1)
+	fmt.Printf("ChallengeResponse: part2 = %+v\n", part2)
+	fmt.Printf("ChallengeResponse: part3 = %+v\n", part3)
 	response := make([]byte, 24)
 	response = append(response, part1...)
 	response = append(response, part2...)
 	response = append(response, part3...)
-	fmt.Printf("ChallengeResponse: response = %+v", response)
+	fmt.Printf("ChallengeResponse: response = %+v\n", response)
 	return response
 }
 
@@ -153,8 +154,8 @@ func ChallengeResponse(challenge, passwordHash []byte) []byte {
 func GenerateNTResponse(AuthenticatorChallenge, PeerChallenge []byte, username, password string) []byte {
 	challenge := ChallengeHash(PeerChallenge, AuthenticatorChallenge, username)
 	passwordHash := NtPasswordHash(password)
-	fmt.Printf("GenerateNTResponse: challenge = %+v", challenge)
-	fmt.Printf("GenerateNTResponse: passwordHash = %+v", passwordHash)
+	fmt.Printf("GenerateNTResponse: challenge = %+v\n", challenge)
+	fmt.Printf("GenerateNTResponse: passwordHash = %+v\n", passwordHash)
 	return ChallengeResponse(challenge, passwordHash)
 }
 
