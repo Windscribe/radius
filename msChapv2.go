@@ -103,6 +103,23 @@ func NtPasswordHash(password string) []byte {
 	return h.Sum(nil)
 }
 
+func strToKey(str []byte) []byte {
+	key := make([]byte, 8)
+	key[0] = str[0] >> 1
+	key[1] = ((str[0] & 0x01) << 6) | (str[1] >> 2)
+	key[2] = ((str[1] & 0x03) << 5) | (str[2] >> 3)
+	key[3] = ((str[2] & 0x07) << 4) | (str[3] >> 4)
+	key[4] = ((str[3] & 0x0F) << 3) | (str[4] >> 5)
+	key[5] = ((str[4] & 0x1F) << 2) | (str[5] >> 6)
+	key[6] = ((str[5] & 0x3F) << 1) | (str[6] >> 7)
+	key[7] = str[6] & 0x7F
+
+	for i := 0; i < 8; i++ {
+		key[i] = (key[i] << 1)
+	}
+	return key
+}
+
 // ChallengeResponse (
 // 	IN  8-octet  Challenge,
 // 	IN  16-octet PasswordHash,
@@ -122,20 +139,15 @@ func NtPasswordHash(password string) []byte {
 func ChallengeResponse(challenge, passwordHash []byte) []byte {
 	ZPasswordHash := zeroPadding(passwordHash, 21)
 	fmt.Printf("ChallengeResponse: ZPasswordHash = %+v\n", ZPasswordHash)
-	key1 := make([]byte, 8)
-	copy(key1, ZPasswordHash[0:7])
-	key2 := make([]byte, 8)
-	copy(key2, ZPasswordHash[7:14])
-	key3 := make([]byte, 8)
-	copy(key3, ZPasswordHash[14:21])
 
-	part1, err := DesEncrypt(challenge, key1)
+	part1, err := DesEncrypt(challenge, strToKey(ZPasswordHash[0:7]))
 	fmt.Printf("ChallengeResponse: err = %+v\n", err)
-	part2, _ := DesEncrypt(challenge, key2)
-	part3, _ := DesEncrypt(challenge, key3)
+	part2, _ := DesEncrypt(challenge, strToKey(ZPasswordHash[7:14]))
+	part3, _ := DesEncrypt(challenge, strToKey(ZPasswordHash[14:21]))
 	fmt.Printf("ChallengeResponse: part1 = %+v\n", part1)
 	fmt.Printf("ChallengeResponse: part2 = %+v\n", part2)
 	fmt.Printf("ChallengeResponse: part3 = %+v\n", part3)
+
 	var response []byte
 	response = append(response, part1...)
 	response = append(response, part2...)
