@@ -20,11 +20,6 @@ type MsChapV2ChallengePacket struct {
 	Name      []byte
 }
 
-// MsChapV2SuccessPacket is sent after the Identity Request
-type MsChapV2SuccessPacket struct {
-	Message []byte
-}
-
 // MsCHapV2ResponsePacket is received as a response to the Challenge packet
 type MsCHapV2ResponsePacket struct {
 	PeerChallenge []byte // 16 bytes
@@ -377,10 +372,6 @@ func (c *MsChapV2ChallengePacket) Encode() []byte {
 	return c.Challenge
 }
 
-func (c *MsChapV2SuccessPacket) Encode() []byte {
-	return c.Message
-}
-
 type MsChapV2Packet struct {
 	Eap    *EapPacket //解密的时候的eap信息,不使用里面的data
 	OpCode MsChapV2OpCode
@@ -395,6 +386,22 @@ func (p *MsChapV2Packet) Encode() (b []byte) {
 	binary.BigEndian.PutUint16(b[2:4], length)
 	b[4] = uint8(len(p.Data))
 	copy(b[5:], p.Data)
+	return b
+}
+
+type MsChapV2SuccessPacket struct {
+	Eap    *EapPacket //解密的时候的eap信息,不使用里面的data
+	OpCode MsChapV2OpCode
+	Data   []byte
+}
+
+func (p *MsChapV2SuccessPacket) Encode() (b []byte) {
+	b = make([]byte, len(p.Data)+4)
+	b[0] = byte(p.OpCode)
+	b[1] = byte(p.Eap.Identifier)
+	length := uint16(len(b))
+	binary.BigEndian.PutUint16(b[2:4], length)
+	copy(b[4:], p.Data)
 	return b
 }
 
