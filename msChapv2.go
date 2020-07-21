@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"unicode/utf16"
 
 	"golang.org/x/crypto/md4"
 )
@@ -37,6 +38,17 @@ func DecodeMsChapV2Response(data []byte) MsCHapV2ResponsePacket {
 		PeerChallenge: data[0:16],
 		NTResponse:    data[24:48],
 	}
+}
+
+// NTPassword Converts pass to UCS-2 (UTF-16)
+func NTPassword(pass string) []byte {
+	buf := utf16.Encode([]rune(pass))
+	enc := make([]byte, len(pass)*2)
+	for i := 0; i < len(pass); i++ {
+		pos := 2 * i
+		binary.LittleEndian.PutUint16(enc[pos:pos+2], buf[i])
+	}
+	return enc
 }
 
 // CheckResponseValidity returns true is the resonse is valid, false if its not
@@ -97,9 +109,9 @@ func ChallengeHash(PeerChallenge, AuthenticatorChallenge []byte, username string
 // 		* including any terminating 0.
 // 		*/
 // 	}
-func NtPasswordHash(password string) []byte {
+func NtPasswordHash(password []byte) []byte {
 	h := md4.New()
-	io.WriteString(h, password)
+	h.Write(password)
 	return h.Sum(nil)
 }
 
@@ -137,21 +149,42 @@ func strToKey(str []byte) []byte {
 // 				   giving 3rd 8-octets of Response )
 // 	}
 func ChallengeResponse(challenge, passwordHash []byte) []byte {
+
 	ZPasswordHash := zeroPadding(passwordHash, 21)
 	fmt.Printf("ChallengeResponse: ZPasswordHash = %+v\n", ZPasswordHash)
 
-	part1, err := DesEncrypt(challenge, strToKey(ZPasswordHash[0:7]))
-	fmt.Printf("ChallengeResponse: err = %+v\n", err)
-	part2, _ := DesEncrypt(challenge, strToKey(ZPasswordHash[7:14]))
-	part3, _ := DesEncrypt(challenge, strToKey(ZPasswordHash[14:21]))
-	fmt.Printf("ChallengeResponse: part1 = %+v\n", part1)
-	fmt.Printf("ChallengeResponse: part2 = %+v\n", part2)
-	fmt.Printf("ChallengeResponse: part3 = %+v\n", part3)
+	response := make([]byte, 24)
 
-	var response []byte
-	response = append(response, part1...)
-	response = append(response, part2...)
-	response = append(response, part3...)
+	{
+		block, e := des.NewCipher(strToKey(ZPasswordHash[:7]))
+		if e != nil {
+			fmt.Printf("ChallengeResponse: err = %+v\n", e)
+			return nil
+		}
+		mode := newECBEncrypter(block)
+		mode.CryptBlocks(response, challenge)
+	}
+
+	{
+		block, e := des.NewCipher(strToKey(ZPasswordHash[7:14]))
+		if e != nil {
+			fmt.Printf("ChallengeResponse: err = %+v\n", e)
+			return nil
+		}
+		mode := newECBEncrypter(block)
+		mode.CryptBlocks(response[8:], challenge)
+	}
+
+	{
+		block, e := des.NewCipher(strToKey(ZPasswordHash[14:21]))
+		if e != nil {
+			fmt.Printf("ChallengeResponse: err = %+v\n", e)
+			return nil
+		}
+		mode := newECBEncrypter(block)
+		mode.CryptBlocks(response[16:], challenge)
+	}
+
 	fmt.Printf("ChallengeResponse: response = %+v\n", response)
 	return response
 }
@@ -172,7 +205,7 @@ func ChallengeResponse(challenge, passwordHash []byte) []byte {
 // 	}
 func GenerateNTResponse(AuthenticatorChallenge, PeerChallenge []byte, username, password string) []byte {
 	challenge := ChallengeHash(PeerChallenge, AuthenticatorChallenge, username)
-	passwordHash := NtPasswordHash(password)
+	passwordHash := NtPasswordHash(NTPassword(password))
 	fmt.Printf("GenerateNTResponse: challenge = %+v\n", challenge)
 	fmt.Printf("GenerateNTResponse: passwordHash = %+v\n", passwordHash)
 	return ChallengeResponse(challenge, passwordHash)
@@ -249,7 +282,7 @@ func GenerateAuthenticatorResponse(PasswordHash, NTResponse, PeerChallenge, Auth
 		0x65, 0x20, 0x69, 0x74, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6F,
 		0x6E}
 
-	PasswordHashHash := NtPasswordHash(string(PasswordHash))
+	PasswordHashHash := NtPasswordHash(PasswordHash)
 
 	h := sha1.New()
 	h.Write(PasswordHashHash)
