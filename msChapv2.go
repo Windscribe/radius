@@ -393,7 +393,8 @@ func (p *MsChapV2Packet) Encode() (b []byte) {
 	b[1] = byte(p.Eap.Identifier)
 	length := uint16(len(b))
 	binary.BigEndian.PutUint16(b[2:4], length)
-	copy(b[4:], p.Data)
+	b[4] = uint8(len(p.Data))
+	copy(b[5:], p.Data)
 	return b
 }
 
