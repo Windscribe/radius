@@ -123,11 +123,11 @@ func ChallengeResponse(challenge, passwordHash []byte) []byte {
 	ZPasswordHash := zeroPadding(passwordHash, 21)
 	fmt.Printf("ChallengeResponse: ZPasswordHash = %+v\n", ZPasswordHash)
 	key1 := make([]byte, 8)
-	key1 = append(key1, ZPasswordHash[0:7]...)
+	copy(key1, ZPasswordHash[0:7])
 	key2 := make([]byte, 8)
-	key2 = append(key2, ZPasswordHash[7:14]...)
+	copy(key2, ZPasswordHash[7:14])
 	key3 := make([]byte, 8)
-	key3 = append(key3, ZPasswordHash[14:21]...)
+	copy(key3, ZPasswordHash[14:21])
 
 	part1, err := DesEncrypt(challenge, key1)
 	fmt.Printf("ChallengeResponse: err = %+v\n", err)
@@ -136,7 +136,7 @@ func ChallengeResponse(challenge, passwordHash []byte) []byte {
 	fmt.Printf("ChallengeResponse: part1 = %+v\n", part1)
 	fmt.Printf("ChallengeResponse: part2 = %+v\n", part2)
 	fmt.Printf("ChallengeResponse: part3 = %+v\n", part3)
-	response := make([]byte, 24)
+	var response []byte
 	response = append(response, part1...)
 	response = append(response, part2...)
 	response = append(response, part3...)
