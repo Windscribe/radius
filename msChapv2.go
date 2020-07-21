@@ -35,8 +35,8 @@ type MsCHapV2ResponsePacket struct {
 // DecodeMsChapV2Response parses the EAP Message data for the peer-challenge and ntresponse
 func DecodeMsChapV2Response(data []byte) MsCHapV2ResponsePacket {
 	return MsCHapV2ResponsePacket{
-		PeerChallenge: data[0:16],
-		NTResponse:    data[24:48],
+		PeerChallenge: data[4:20],
+		NTResponse:    data[28:52],
 	}
 }
 
