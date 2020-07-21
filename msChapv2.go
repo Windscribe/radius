@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
 	"strconv"
 	"unicode/utf16"
 
@@ -90,11 +89,11 @@ func CheckResponseValidity(response, AuthenticatorChallenge, PeerChallenge []byt
 // 	   SHAFinal(Context, Digest)
 // 	   memcpy(Challenge, Digest, 8)
 // 	}
-func ChallengeHash(PeerChallenge, AuthenticatorChallenge []byte, username string) []byte {
+func ChallengeHash(PeerChallenge, AuthenticatorChallenge, username []byte) []byte {
 	h := sha1.New()
 	h.Write(PeerChallenge)
 	h.Write(AuthenticatorChallenge)
-	io.WriteString(h, username)
+	h.Write(username)
 	hash := h.Sum(nil)
 	return hash[0:8]
 }
@@ -204,7 +203,7 @@ func ChallengeResponse(challenge, passwordHash []byte) []byte {
 // 	   ChallengeResponse( Challenge, PasswordHash, giving Response )
 // 	}
 func GenerateNTResponse(AuthenticatorChallenge, PeerChallenge []byte, username, password string) []byte {
-	challenge := ChallengeHash(PeerChallenge, AuthenticatorChallenge, username)
+	challenge := ChallengeHash(PeerChallenge, AuthenticatorChallenge, []byte(username))
 	passwordHash := NtPasswordHash(NTPassword(password))
 	fmt.Printf("GenerateNTResponse: challenge = %+v\n", challenge)
 	fmt.Printf("GenerateNTResponse: passwordHash = %+v\n", passwordHash)
@@ -290,7 +289,7 @@ func GenerateAuthenticatorResponse(PasswordHash, NTResponse, PeerChallenge, Auth
 	h.Write(Magic1)
 	digest := h.Sum(nil)
 
-	challenge := ChallengeHash(PeerChallenge, AuthenticatorChallenge, username)
+	challenge := ChallengeHash(PeerChallenge, AuthenticatorChallenge, []byte(username))
 
 	h2 := sha1.New()
 	h2.Write(digest)
