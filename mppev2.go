@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	MSMPPEEncryptionPolicy               = 7
-	MSMPPEEncryptionTypes                = 8
-	MSCHAPMPPEKeys         AttributeType = 12
-	MSMPPESendKey          AttributeType = 16
-	MSMPPERecvKey          AttributeType = 17
-	Microsoft              uint32        = 311
+	MSMPPEEncryptionPolicy        = 7
+	MSMPPEEncryptionTypes         = 8
+	MSCHAPMPPEKeys         uint8  = 12
+	MSMPPESendKey          uint8  = 16
+	MSMPPERecvKey          uint8  = 17
+	Microsoft              uint32 = 311
 )
 
 // Pads used in key derivation
