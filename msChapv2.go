@@ -109,6 +109,11 @@ func NtPasswordHash(password []byte) []byte {
 	return h.Sum(nil)
 }
 
+// DES uses 56-bit keys, expanded to 64 bits by the insertion of parity
+// bits.  After the parity of the key has been fixed, every eighth bit
+// is a parity bit and the number of bits that are set (1) in each octet
+// is odd; i.e., odd parity.  Note that many DES engines do not check
+// parity, however, simply stripping the parity bits.
 func strToKey(str []byte) []byte {
 	key := make([]byte, 8)
 	key[0] = str[0] >> 1
