@@ -20,23 +20,16 @@ type Server struct {
 }
 
 var ServerChallenges map[uint8][]byte
+var PeerMSK map[uint8]map[string][]byte
 
 type Service interface {
 	RadiusHandle(request *Packet) *Packet
 }
 
-type PasswordService struct{}
-
-func (p *PasswordService) Authenticate(request *Packet) (*Packet, error) {
-	npac := request.Reply()
-	npac.Code = AccessReject
-	npac.AVPs = append(npac.AVPs, AVP{Type: ReplyMessage, Value: []byte("you dick!")})
-	return npac, nil
-}
-
 // NewServer return a new Server given a addr, secret, and service
 func NewServer(addr string, secret string, service Service) *Server {
 	ServerChallenges = map[uint8][]byte{}
+	PeerMSK = map[uint8]map[string][]byte{}
 	s := &Server{addr: addr,
 		secret:    secret,
 		service:   service,
