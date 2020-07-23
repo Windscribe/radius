@@ -100,9 +100,11 @@ func getAsymmetricStartKey(masterKey []byte, sessKeyLen int, isSend bool) []byte
 	return hash.Sum(nil)[:sessKeyLen]
 }
 
-func masterKeys(pass string, ntResponse []byte) ([]byte, []byte) {
+func masterKeys(passHash []byte, ntResponse []byte) ([]byte, []byte) {
 	// PasswordHashHash( NtPasswordHash(Password, PasswordHash) )
-	hashHash := NtPasswordHash(NtPasswordHash(NTPassword(pass)))
+	// hashHash := NtPasswordHash(NtPasswordHash(NTPassword(pass)))
+	// we use the hash so that we dont have to have access to the plaintext password
+	hashHash := NtPasswordHash(passHash)
 	// GetMasterKey(PasswordHashHash, NtResponse, MasterKey)
 	masterKey := getMasterKey(hashHash, ntResponse)
 
@@ -235,8 +237,8 @@ func salt(offset uint8) []byte {
 	return pfx
 }
 
-func Mmpev2(secret string, pass string, reqAuth []byte, ntResponse []byte) ([]byte, []byte) {
-	send, recv := masterKeys(pass, ntResponse)
+func Mmpev2(secret string, passHash []byte, reqAuth []byte, ntResponse []byte) ([]byte, []byte) {
+	send, recv := masterKeys(passHash, ntResponse)
 	sendEnc := tunnelPass(secret, send, reqAuth, salt(0))
 	recvEnc := tunnelPass(secret, recv, reqAuth, salt(1))
 
