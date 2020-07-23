@@ -1,18 +1,7 @@
 Radius
 =============================
-[![Build Status](https://travis-ci.org/bronze1man/radius.svg)](https://travis-ci.org/bronze1man/radius)
-[![GoDoc](https://godoc.org/github.com/bronze1man/radius?status.svg)](https://godoc.org/github.com/bronze1man/radius)
-[![docs examples](https://sourcegraph.com/api/repos/github.com/bronze1man/radius/badges/docs-examples.png)](https://sourcegraph.com/github.com/bronze1man/radius)
-[![Total views](https://sourcegraph.com/api/repos/github.com/bronze1man/radius/counters/views.png)](https://sourcegraph.com/github.com/bronze1man/radius)
-[![GitHub issues](https://img.shields.io/github/issues/bronze1man/radius.svg)](https://github.com/bronze1man/radius/issues)
-[![GitHub stars](https://img.shields.io/github/stars/bronze1man/radius.svg)](https://github.com/bronze1man/radius/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/bronze1man/radius.svg)](https://github.com/bronze1man/radius/network)
-[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/bronze1man/radius/blob/master/LICENSE)
-
-A golang radius library. This project forks from [jeesta/radius](https://github.com/jessta/radius)
 
 ### Documentation
-* http://godoc.org/github.com/bronze1man/radius
 * http://en.wikipedia.org/wiki/RADIUS
 
 ### Example
@@ -21,7 +10,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/bronze1man/radius"
+	"github.com/Windscribe/radius"
 )
 
 type radiusService struct{}
@@ -81,14 +70,6 @@ func main() {
 }
 ```
 
-### Implemented
-* A radius server can handle AccessRequest request from strongswan with ikev1-xauth-psk
-* A radius server can handle AccountingRequest request from strongswan with ikev1-xauth-psk
-
-### Notice
-* A radius client has not yet been implement.
-* It works , but it is not stable.
-
 ### Reference
 * EAP MS-CHAPv2 packet format 								http://tools.ietf.org/id/draft-kamath-pppext-eap-mschapv2-01.txt
 * EAP MS-CHAPv2 											https://tools.ietf.org/html/rfc2759
@@ -96,8 +77,3 @@ func main() {
 * RADIUS Accounting-Request part  							https://tools.ietf.org/html/rfc2866
 * RADIUS Support For Extensible Authentication Protocol 	https://tools.ietf.org/html/rfc3579
 * RADIUS Implementation Issues and Suggested Fixes 			https://tools.ietf.org/html/rfc5080
-
-### TODO
-* avpEapMessaget.Value error handle.
-* Implement eap-MSCHAPV2 server side.
-* Implement radius client side.

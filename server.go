@@ -19,7 +19,12 @@ type Server struct {
 	cl        *ClientList
 }
 
+// ServerChallenges stores the challenges sent to peers.
+// The key is the EAP Identifier field
 var ServerChallenges map[uint8][]byte
+
+// PeerMSK stores the password and ntResponse of a successful challenge response for generating the MSK upon AccessAccept.
+// The key is the EAP Identifier field
 var PeerMSK map[uint8]map[string][]byte
 
 type Service interface {
@@ -28,8 +33,11 @@ type Service interface {
 
 // NewServer return a new Server given a addr, secret, and service
 func NewServer(addr string, secret string, service Service) *Server {
+
+	// init EAP state vars
 	ServerChallenges = map[uint8][]byte{}
 	PeerMSK = map[uint8]map[string][]byte{}
+
 	s := &Server{addr: addr,
 		secret:    secret,
 		service:   service,
@@ -43,12 +51,6 @@ func NewServer(addr string, secret string, service Service) *Server {
 func (s *Server) WithClientList(cl *ClientList) {
 	s.cl = cl
 }
-
-/*
-func (s *Server) RegisterService(serviceAddr string, handler Service) {
-	s.services[serviceAddr] = handler
-}
-*/
 
 // ListenAndServe listen on the UDP network address
 func (s *Server) ListenAndServe() error {

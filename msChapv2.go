@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"strconv"
 	"unicode/utf16"
@@ -46,7 +45,7 @@ func NTPassword(pass string) []byte {
 }
 
 // CheckResponseValidity returns true is the resonse is valid, false if its not
-func CheckResponseValidity(response, AuthenticatorChallenge, PeerChallenge []byte, username, password string) bool {
+func CheckResponseValidity(response, AuthenticatorChallenge, PeerChallenge []byte, username string, password []byte) bool {
 	// The NT-Response field is an encoded function of the password, the
 	// Name field of the Response packet, the contents of the Peer-Challenge
 	// field and the received Challenge as output by the routine
@@ -202,9 +201,8 @@ func ChallengeResponse(challenge, passwordHash []byte) []byte {
 // 	   NtPasswordHash( Password, giving PasswordHash )
 // 	   ChallengeResponse( Challenge, PasswordHash, giving Response )
 // 	}
-func GenerateNTResponse(AuthenticatorChallenge, PeerChallenge []byte, username, password string) []byte {
+func GenerateNTResponse(AuthenticatorChallenge, PeerChallenge []byte, username string, passwordHash []byte) []byte {
 	challenge := ChallengeHash(PeerChallenge, AuthenticatorChallenge, []byte(username))
-	passwordHash := NtPasswordHash(NTPassword(password))
 	fmt.Printf("GenerateNTResponse: challenge = %+v\n", challenge)
 	fmt.Printf("GenerateNTResponse: passwordHash = %+v\n", passwordHash)
 	return ChallengeResponse(challenge, passwordHash)
@@ -303,45 +301,6 @@ func GenerateAuthenticatorResponse(PasswordHash, NTResponse, PeerChallenge, Auth
 	return fmt.Sprintf("S=%X", final)
 }
 
-// DesEncrypt (
-// 	IN  8-octet Clear,
-// 	IN  7-octet Key,
-// 	OUT 8-octet Cypher )
-// 	{
-// 	   /*
-// 		* Use the DES encryption algorithm [4] in ECB mode [10]
-// 		* to encrypt Clear into Cypher such that Cypher can
-// 		* only be decrypted back to Clear by providing Key.
-// 		* Note that the DES algorithm takes as input a 64-bit
-// 		* stream where the 8th, 16th, 24th, etc.  bits are
-// 		* parity bits ignored by the encrypting algorithm.
-// 		* Unless you write your own DES to accept 56-bit input
-// 		* without parity, you will need to insert the parity bits
-// 		* yourself.
-// 		*/
-// 	}
-// Implementation from : https://gist.github.com/cuixin/10612934
-func DesEncrypt(src, key []byte) ([]byte, error) {
-	block, err := des.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	bs := block.BlockSize()
-	src = zeroPadding(src, bs)
-	// src = PKCS5Padding(src, bs)
-	if len(src)%bs != 0 {
-		return nil, errors.New("Need a multiple of the blocksize")
-	}
-	out := make([]byte, len(src))
-	dst := out
-	for len(src) > 0 {
-		block.Encrypt(dst, src[:bs])
-		src = src[bs:]
-		dst = dst[bs:]
-	}
-	return out, nil
-}
-
 func zeroPadding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{0}, padding)
@@ -399,7 +358,7 @@ func (p *MsChapV2Packet) Encode() (b []byte) {
 }
 
 type MsChapV2SuccessPacket struct {
-	Eap    *EapPacket //解密的时候的eap信息,不使用里面的data
+	Eap    *EapPacket
 	OpCode MsChapV2OpCode
 	Data   []byte
 }
@@ -426,7 +385,6 @@ func MsChapV2PacketFromEap(eap *EapPacket) (p *MsChapV2Packet, err error) {
 	return p, nil
 }
 
-//不包括eap的信息
 func (p *MsChapV2Packet) String() string {
 	return fmt.Sprintf("OpCode:%s Data:[%#v]", p.OpCode, p.Data)
 }
