@@ -307,7 +307,7 @@ func zeroPadding(ciphertext []byte, blockSize int) []byte {
 	return append(ciphertext, padtext...)
 }
 
-func randomBytes(n int) ([]byte, error) {
+func RandomBytes(n int) ([]byte, error) {
 	bytes := make([]byte, n)
 	if _, err := rand.Read(bytes); err != nil {
 		return bytes, err
@@ -326,7 +326,7 @@ func nextIdentifier(data map[uint8][]byte) uint8 {
 func (c *MsChapV2ChallengePacket) GenerateChallenge(nasID string) uint8 {
 	//TODO handle error
 	identifier := nextIdentifier(ServerChallenges)
-	challenge, _ := randomBytes(16)
+	challenge, _ := RandomBytes(16)
 	// Save the challenge to verify the response
 	ServerChallenges[identifier] = challenge
 	c.Challenge = []byte(challenge)
