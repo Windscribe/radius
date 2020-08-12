@@ -291,7 +291,7 @@ func GenerateAuthenticatorResponse(PasswordHash, NTResponse, PeerChallenge, Auth
 	h.Write(Magic1)
 	digest := h.Sum(nil)
 
-	fmt.Printf("Success DEBUG: %+v", len(digest))
+	fmt.Printf("Success DEBUG: %+v\n", len(digest))
 
 	challenge := ChallengeHash(PeerChallenge, AuthenticatorChallenge, []byte(username))
 
