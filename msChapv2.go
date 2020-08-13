@@ -317,7 +317,7 @@ func RandomBytes(n int) ([]byte, error) {
 	return bytes, nil
 }
 
-func nextIdentifier(data map[uint8][]byte) uint8 {
+func NextIdentifier(data map[uint8][]byte) uint8 {
 	nextID := uint8(len(data)) + 1
 	if nextID > 255 {
 		nextID = 1
@@ -327,7 +327,7 @@ func nextIdentifier(data map[uint8][]byte) uint8 {
 
 func (c *MsChapV2ChallengePacket) GenerateChallenge(nasID string) uint8 {
 	//TODO handle error
-	identifier := nextIdentifier(ServerChallenges)
+	identifier := NextIdentifier(ServerChallenges)
 	challenge, _ := RandomBytes(16)
 	// Save the challenge to verify the response
 	ServerChallenges[identifier] = challenge
