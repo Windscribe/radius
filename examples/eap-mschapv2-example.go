@@ -202,9 +202,10 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 							npac.Code = radius.AccessChallenge
 
 							msPkt := radius.MsChapV2SuccessPacket{
-								Eap:    eapMessage,
-								OpCode: radius.MsChapV2OpCodeSuccess,
-								Data:   []byte(response),
+								Eap:        eapMessage,
+								OpCode:     radius.MsChapV2OpCodeSuccess,
+								Identifier: eapMessage.Identifier,
+								Data:       []byte(response),
 							}
 
 							// We need to increment the Identifier for the new challenge request
