@@ -362,9 +362,10 @@ func (p *MsChapV2Packet) Encode() (b []byte) {
 }
 
 type MsChapV2SuccessPacket struct {
-	Eap    *EapPacket
-	OpCode MsChapV2OpCode
-	Data   []byte
+	Eap        *EapPacket
+	OpCode     MsChapV2OpCode
+	Identifier uint8
+	Data       []byte
 }
 
 func (p *MsChapV2SuccessPacket) Encode() (b []byte) {
@@ -376,7 +377,7 @@ func (p *MsChapV2SuccessPacket) Encode() (b []byte) {
 	// 	The MS-CHAPv2-ID field is one octet and aids in matching MSCHAP-v2
 	//  responses with requests.  Typically, the MS-CHAPv2-ID field is the
 	//  same as the Identifier field.
-	b[1] = byte(p.Eap.Identifier - 1)
+	b[1] = byte(p.Identifier)
 	length := uint16(len(p.Data))
 	binary.BigEndian.PutUint16(b[2:4], length)
 	copy(b[4:], p.Data)
