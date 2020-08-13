@@ -318,6 +318,7 @@ func RandomBytes(n int) ([]byte, error) {
 }
 
 func NextIdentifier() uint8 {
+	//TODO: add a lock on ServerChallenges
 	nextID := uint8(len(ServerChallenges)) + 1
 	if nextID > 255 {
 		nextID = 1
@@ -355,6 +356,9 @@ func (p *MsChapV2Packet) Encode() (b []byte) {
 	length := uint16(len(b))
 	binary.BigEndian.PutUint16(b[2:4], length)
 	b[4] = uint8(len(p.Data))
+	if p.OpCode == MsChapV2OpCodeChallenge {
+		b[4] = uint8(16)
+	}
 	copy(b[5:], p.Data)
 	return b
 }

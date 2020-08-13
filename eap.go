@@ -109,6 +109,7 @@ type EapPacket struct {
 	Identifier uint8
 	Type       EapType
 	Data       []byte
+	OpCode     MsChapV2OpCode
 }
 
 func (a *EapPacket) String() string {
@@ -132,15 +133,12 @@ func (a *EapPacket) Encode() (b []byte) {
 	length := uint16(len(b))
 	binary.BigEndian.PutUint16(b[2:4], length)
 	b[4] = byte(a.Type)
+	if a.OpCode == MsChapV2OpCodeSuccess {
+		//The MS-Length field is two octets and MUST be set to the value of the Length field minus 5.
+		a.Data[3] = b[3] - 5
+	}
 	copy(b[5:], a.Data)
 	return b
-}
-
-func (a *EapPacket) ToEAPMessage() *AVP {
-	return &AVP{
-		Type:  EAPMessage,
-		Value: a.Encode(),
-	}
 }
 
 func EapDecode(b []byte) (eap *EapPacket, err error) {
