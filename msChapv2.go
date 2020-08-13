@@ -338,13 +338,11 @@ func (c *MsChapV2ChallengePacket) GenerateChallenge(nasID string) uint8 {
 }
 
 func (c *MsChapV2ChallengePacket) Encode() []byte {
-	// Microsoft authenticators do not currently provide information in the Name field.  This may change in the future.
 	return append(c.Challenge, c.Name...)
-	//return c.Challenge
 }
 
 type MsChapV2Packet struct {
-	Eap    *EapPacket //解密的时候的eap信息,不使用里面的data
+	Eap    *EapPacket
 	OpCode MsChapV2OpCode
 	Data   []byte
 }
@@ -372,7 +370,7 @@ type MsChapV2SuccessPacket struct {
 func (p *MsChapV2SuccessPacket) Encode() (b []byte) {
 	b = make([]byte, len(p.Data)+4)
 	b[0] = byte(p.OpCode)
-	b[1] = byte(p.Eap.Identifier - 1)
+	b[1] = byte(p.Eap.Identifier)
 	length := uint16(len(p.Data))
 	binary.BigEndian.PutUint16(b[2:4], length)
 	copy(b[4:], p.Data)
