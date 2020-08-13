@@ -370,6 +370,12 @@ type MsChapV2SuccessPacket struct {
 func (p *MsChapV2SuccessPacket) Encode() (b []byte) {
 	b = make([]byte, len(p.Data)+4)
 	b[0] = byte(p.OpCode)
+	// Here we revert the Identifier field to the previous value, since the EAP identifier was incremented
+	// Without this, Windows clients do not work (throw 691 error)
+	// The RFC does not seem to explain why this would be needed: https://tools.ietf.org/id/draft-kamath-pppext-eap-mschapv2-01.txt
+	// 	The MS-CHAPv2-ID field is one octet and aids in matching MSCHAP-v2
+	//  responses with requests.  Typically, the MS-CHAPv2-ID field is the
+	//  same as the Identifier field.
 	b[1] = byte(p.Eap.Identifier - 1)
 	length := uint16(len(p.Data))
 	binary.BigEndian.PutUint16(b[2:4], length)
