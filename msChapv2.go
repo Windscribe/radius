@@ -370,7 +370,7 @@ type MsChapV2SuccessPacket struct {
 func (p *MsChapV2SuccessPacket) Encode() (b []byte) {
 	b = make([]byte, len(p.Data)+4)
 	b[0] = byte(p.OpCode)
-	b[1] = byte(p.Eap.Identifier)
+	b[1] = byte(p.Eap.Identifier - 1)
 	length := uint16(len(p.Data))
 	binary.BigEndian.PutUint16(b[2:4], length)
 	copy(b[4:], p.Data)
