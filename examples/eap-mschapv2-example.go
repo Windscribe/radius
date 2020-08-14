@@ -2,13 +2,12 @@ package main
 
 import (
 	"bytes"
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/Windscribe/radius"
+	"github.com/function61/gokit/logex"
 )
 
 type radiusService struct{}
@@ -45,7 +44,7 @@ var radisuSecret = "XXXXXXXXXXXXXXXX"
 func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 
 	// a pretty print of the request.
-	fmt.Printf("[Authenticate]\n%s\n", request.String())
+	mainLog.Debug.Printf("[Authenticate]\n%s\n", request.String())
 
 	eapMessage := request.GetEAPMessage()
 	npac := request.Reply()
@@ -53,10 +52,10 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 	// Check if this is an EAP message
 	if eapMessage != nil {
 
-		fmt.Printf("[EAP-Message] Code: %s\n", radius.EapCode(eapMessage.Code))
-		fmt.Printf("[EAP-Message] Type: %s\n", radius.EapType(eapMessage.Type))
-		fmt.Printf("[EAP-Message] ID: %d\n", eapMessage.Identifier)
-		fmt.Printf("[EAP-Message] Data: %#v\n", eapMessage.Data)
+		mainLog.Debug.Printf("[EAP-Message] Code: %s\n", radius.EapCode(eapMessage.Code))
+		mainLog.Debug.Printf("[EAP-Message] Type: %s\n", radius.EapType(eapMessage.Type))
+		mainLog.Debug.Printf("[EAP-Message] ID: %d\n", eapMessage.Identifier)
+		mainLog.Debug.Printf("[EAP-Message] Data: %#v\n", eapMessage.Data)
 
 		switch eapMessage.Code {
 
@@ -90,7 +89,7 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 					Value: eapMessage.Encode(),
 				})
 
-				fmt.Println("Sending EAP Challenge")
+				mainLog.Debug.Println("Sending EAP Challenge")
 				return npac
 
 			}
@@ -100,7 +99,7 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 
 				// MSCHAPv2 type messages could be in response to the regular Challenge EAP message, or, to the Success Packet
 
-				fmt.Println("Got EapTypeMSCHAPV2 packet!")
+				mainLog.Debug.Println("Got EapTypeMSCHAPV2 packet!")
 
 				// check the ID, if ServerChallenges contains 0x3 (success) and EAP data is 0x3, respond with AccessAccept
 				// If we have only a value of "3" (Success), this is a response to the Success Packet, which is also an AccessChallenge
@@ -122,7 +121,7 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 								send, recv := radius.Mmpev2(radisuSecret, peermsk["password"], []byte(request.Authenticator[:]), peermsk["resp"])
 
 								// This is a success mschapv2 packet
-								fmt.Printf("Sending AccessAccept \n")
+								mainLog.Debug.Printf("Sending AccessAccept \n")
 								npac.Code = radius.AccessAccept
 
 								npac.AddAVP(radius.AVP{
@@ -163,7 +162,7 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 								radius.ServerChallenges[eapMessage.Identifier] = []byte{}
 								radius.PeerMSK[eapMessage.Identifier] = map[string][]byte{}
 
-								fmt.Println("Sending Access-Accept")
+								mainLog.Debug.Println("Sending Access-Accept")
 
 								return npac
 
@@ -172,7 +171,7 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 					}
 
 					// log error send access reject
-					fmt.Println("Sending Access-Reject")
+					mainLog.Debug.Println("Sending Access-Reject")
 					npac.Code = radius.AccessReject
 					return npac
 
@@ -185,7 +184,7 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 				if authChallenge, ok := radius.ServerChallenges[eapMessage.Identifier]; ok {
 
 					username := request.GetUsername()
-					fmt.Printf("DEBUG username: (%d) %+v\n", len(username), username)
+					mainLog.Debug.Printf("DEBUG username: (%d) %+v\n", len(username), username)
 
 					// Here you would not use the local credentials map, but call your datasource for the password
 					if password, ok := credentials[username]; ok {
@@ -231,7 +230,7 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 								"resp":     respPkt.NTResponse,
 							}
 
-							fmt.Println("Sending EAP Success Packet in RADIUS Access-Challenge")
+							mainLog.Debug.Println("Sending EAP Success Packet in RADIUS Access-Challenge")
 							return npac
 
 						}
@@ -258,7 +257,7 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 							Value: eapPkt,
 						})
 
-						fmt.Println("Sending Failure Packet in Access-Reject")
+						mainLog.Debug.Println("Sending Failure Packet in Access-Reject")
 						return npac
 
 					}
@@ -273,7 +272,7 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 	switch request.Code {
 	case radius.AccessRequest:
 		// check username and password
-		fmt.Printf("[DEBUG] %s / %s\n", request.GetUsername(), request.GetPassword())
+		mainLog.Debug.Printf("%s / %s\n", request.GetUsername(), request.GetPassword())
 
 		// Do your credential checks here and set the response code and attributes appropriately
 
@@ -291,18 +290,23 @@ func (p radiusService) RadiusHandle(request *radius.Packet) *radius.Packet {
 	default:
 		npac.Code = radius.AccessReject
 	}
-	fmt.Printf("last return packet:\n %+v\n", npac.String())
+	mainLog.Debug.Printf("last return packet:\n %+v\n", npac.String())
 	return npac
 }
 
+var (
+	rootLogger = logex.StandardLogger()
+	mainLog    = logex.Levels(logex.Prefix("[main]", rootLogger))
+)
+
 func main() {
-	s := radius.NewServer("127.0.0.1:1812", radisuSecret, radiusService{})
+	s := radius.NewServer("127.0.0.1:1812", radisuSecret, radiusService{}, mainLog)
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	errChan := make(chan error)
 	go func() {
-		fmt.Println("waiting for packets...")
+		mainLog.Debug.Println("waiting for packets...")
 		err := s.ListenAndServe()
 		if err != nil {
 			errChan <- err
@@ -310,9 +314,9 @@ func main() {
 	}()
 	select {
 	case <-signalChan:
-		log.Println("stopping server...")
+		mainLog.Debug.Println("stopping server...")
 		s.Stop()
 	case err := <-errChan:
-		log.Printf("[ERR] %v", err.Error())
+		mainLog.Error.Printf("%v", err.Error())
 	}
 }

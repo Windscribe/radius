@@ -50,9 +50,9 @@ func CheckResponseValidity(response, AuthenticatorChallenge, PeerChallenge []byt
 	// Name field of the Response packet, the contents of the Peer-Challenge
 	// field and the received Challenge as output by the routine
 	// GenerateNTResponse() defined in  [RFC2759], Section 8.1.
-	fmt.Printf("[VALIDATE] response: %#v\n", response)
+	Logger.Debug.Printf("[VALIDATE] response: %#v\n", response)
 	check := GenerateNTResponse(AuthenticatorChallenge, PeerChallenge, username, password)
-	fmt.Printf("[VALIDATE] calculated: %#v\n", check)
+	Logger.Debug.Printf("[VALIDATE] calculated: %#v\n", check)
 	if bytes.Compare(response, check) == 0 {
 		return true
 	}
@@ -149,14 +149,14 @@ func strToKey(str []byte) []byte {
 func ChallengeResponse(challenge, passwordHash []byte) []byte {
 
 	ZPasswordHash := zeroPadding(passwordHash, 21)
-	fmt.Printf("ChallengeResponse: ZPasswordHash = %+v\n", ZPasswordHash)
+	Logger.Debug.Printf("ChallengeResponse: ZPasswordHash = %+v\n", ZPasswordHash)
 
 	response := make([]byte, 24)
 
 	{
 		block, e := des.NewCipher(strToKey(ZPasswordHash[:7]))
 		if e != nil {
-			fmt.Printf("ChallengeResponse: err = %+v\n", e)
+			Logger.Error.Printf("ChallengeResponse: err = %+v\n", e)
 			return nil
 		}
 		mode := newECBEncrypter(block)
@@ -166,7 +166,7 @@ func ChallengeResponse(challenge, passwordHash []byte) []byte {
 	{
 		block, e := des.NewCipher(strToKey(ZPasswordHash[7:14]))
 		if e != nil {
-			fmt.Printf("ChallengeResponse: err = %+v\n", e)
+			Logger.Error.Printf("ChallengeResponse: err = %+v\n", e)
 			return nil
 		}
 		mode := newECBEncrypter(block)
@@ -176,14 +176,14 @@ func ChallengeResponse(challenge, passwordHash []byte) []byte {
 	{
 		block, e := des.NewCipher(strToKey(ZPasswordHash[14:21]))
 		if e != nil {
-			fmt.Printf("ChallengeResponse: err = %+v\n", e)
+			Logger.Error.Printf("ChallengeResponse: err = %+v\n", e)
 			return nil
 		}
 		mode := newECBEncrypter(block)
 		mode.CryptBlocks(response[16:], challenge)
 	}
 
-	fmt.Printf("ChallengeResponse: response = %+v\n", response)
+	Logger.Debug.Printf("ChallengeResponse: response = %+v\n", response)
 	return response
 }
 
@@ -203,8 +203,8 @@ func ChallengeResponse(challenge, passwordHash []byte) []byte {
 // 	}
 func GenerateNTResponse(AuthenticatorChallenge, PeerChallenge []byte, username string, passwordHash []byte) []byte {
 	challenge := ChallengeHash(PeerChallenge, AuthenticatorChallenge, []byte(username))
-	fmt.Printf("GenerateNTResponse: challenge = %+v\n", challenge)
-	fmt.Printf("GenerateNTResponse: passwordHash = %+v\n", passwordHash)
+	Logger.Debug.Printf("GenerateNTResponse: challenge = %+v\n", challenge)
+	Logger.Debug.Printf("GenerateNTResponse: passwordHash = %+v\n", passwordHash)
 	return ChallengeResponse(challenge, passwordHash)
 }
 
@@ -290,8 +290,6 @@ func GenerateAuthenticatorResponse(PasswordHash, NTResponse, PeerChallenge, Auth
 	h.Write(NTResponse)
 	h.Write(Magic1)
 	digest := h.Sum(nil)
-
-	fmt.Printf("Success DEBUG: %+v\n", len(digest))
 
 	challenge := ChallengeHash(PeerChallenge, AuthenticatorChallenge, []byte(username))
 

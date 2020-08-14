@@ -1,10 +1,11 @@
 package radius
 
 import (
-	"fmt"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/function61/gokit/logex"
 )
 
 const AUTH_PORT = 1812
@@ -31,8 +32,12 @@ type Service interface {
 	RadiusHandle(request *Packet) *Packet
 }
 
+var Logger *logex.Leveled
+
 // NewServer return a new Server given a addr, secret, and service
-func NewServer(addr string, secret string, service Service) *Server {
+func NewServer(addr string, secret string, service Service, logger *logex.Leveled) *Server {
+
+	Logger = logger
 
 	// init EAP state vars
 	ServerChallenges = map[uint8][]byte{}
@@ -88,7 +93,7 @@ func (s *Server) ListenAndServe() error {
 			if s.cl != nil {
 				host, _, err := net.SplitHostPort(addr.String())
 				if err != nil {
-					fmt.Println("[pac.Host]", err)
+					Logger.Error.Println("net.SplitHostPort: ", err)
 					return
 				}
 				if cl := s.cl.Get(host); cl != nil {
@@ -98,7 +103,7 @@ func (s *Server) ListenAndServe() error {
 
 			pac, err := DecodePacket(secret, p)
 			if err != nil {
-				fmt.Println("[pac.Decode]", err)
+				Logger.Error.Println("DecodePacket: ", err)
 				return
 			}
 			pac.ClientAddr = addr.String()
@@ -106,7 +111,7 @@ func (s *Server) ListenAndServe() error {
 			npac := s.service.RadiusHandle(pac)
 			err = npac.Send(conn, addr)
 			if err != nil {
-				fmt.Println("[npac.Send]", err)
+				Logger.Error.Println("npac.Send: ", err)
 			}
 		}(b[:n], addr)
 	}

@@ -155,6 +155,5 @@ func EapDecode(b []byte) (eap *EapPacket, err error) {
 		Type:       EapType(b[4]),
 		Data:       b[5:length],
 	}
-	//TODO validate via Message-Authenticator attr
 	return eap, nil
 }
